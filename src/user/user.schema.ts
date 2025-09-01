@@ -1,4 +1,4 @@
-import { Schema, Document } from 'mongoose';
+import { Schema, Document, Types } from 'mongoose';
 
 export const UserSchema = new Schema(
   {
@@ -13,10 +13,11 @@ export const UserSchema = new Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export interface User extends Document {
+  _id: string;
   email: string;
   password: string;
   name: string;
