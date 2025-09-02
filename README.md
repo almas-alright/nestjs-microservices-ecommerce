@@ -1,98 +1,93 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# E-Commerce Microservices API (NestJS)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Objective
+This project is a **Microservices-based E-Commerce API** built using **NestJS**. It demonstrates how to build scalable and maintainable microservices with the following features:
 
-## Description
+- **Auth Service**: Manages user authentication, registration, and JWT-based authorization.
+- **Product Service**: Handles CRUD operations for products, product categories, and brands.
+- **User Service**: Manages user data for admin, shop owners, and sellers.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Technologies Used:
+- **NestJS**: A progressive Node.js framework for building efficient and scalable applications.
+- **MongoDB**: NoSQL database used to store data for each service.
+- **JWT**: Used for user authentication and authorization.
+- **Docker**: For containerization and easier deployment.
+- **RabbitMQ/Kafka**: For inter-service communication (future feature).
 
-## Project setup
+## Installation Instructions
 
+### Prerequisites
+- Node.js (>=14.x)
+- npm or yarn
+- MongoDB (for local development)
+
+### 1. Clone the repository
 ```bash
-$ npm install
+git clone https://github.com/almas-alright/nestjs-microservices-ecommerce.git
+cd nestjs-microservices-ecommerce
 ```
 
-## Compile and run the project
-
+### 2. Install dependencies
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+### 3. Configure Environment Variables
+Copy the `example.env.auth`, `example.env.product`, and `example.env.user` files from the `src/config/env/` folder and rename them (excluding the `example` prefix). Then place them in the root directory:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Example command for Ubuntu/macOS
+for file in src/config/env/*; do
+  if [[ ! $(basename "$file") =~ ^example\. ]]; then
+    cp "$file" ./"$(basename "$file")"
+  fi
+done
 ```
 
-## Deployment
+### 4. Set up the environment variables
+Each `.env` file is specific to the service, like `auth.env`, `product.env`, and `user.env`. Make sure to configure these files by editing the respective environment variables (like database URLs, JWT secrets).
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 5. Run the Application
+To run the services locally, use the following command:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 6. Access the Services
+- Auth Service: `http://localhost:3001`
+- Product Service: `http://localhost:3002`
+- User Service: `http://localhost:3003`
 
-## Resources
+### 7. Running in Docker (Optional)
+To run the services using Docker, follow the Docker setup steps in the Dockerfile and docker-compose files.
 
-Check out a few resources that may come in handy when working with NestJS:
+## PowerShell Script for Windows Users
+If you're using Windows and want to copy `.env` files from `src/config/env/` to the root directory, you can use the following PowerShell script:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```powershell
+# PowerShell script to copy .env files from src/config/env/ to root and rename them
+$sourceDir = "src/config/env/"
+$destinationDir = "."
 
-## Support
+# Get all .env files in the source directory (excluding "example.*")
+Get-ChildItem -Path $sourceDir -Filter "*.env" | Where-Object { $_.Name -notmatch "^example\." } | ForEach-Object {
+    $destPath = Join-Path -Path $destinationDir -ChildPath $_.Name
+    Copy-Item -Path $_.FullName -Destination $destPath
+}
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 8. Running `copy-env-files.sh` (For Ubuntu/macOS users)
+To copy `.env` files from `src/config/env/` to the root directory and rename them, execute the following Bash script:
 
-## Stay in touch
+```bash
+# Make sure the script is executable
+chmod +x copy-env-files.sh
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# Run the script
+./copy-env-files.sh
+```
 
 ## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

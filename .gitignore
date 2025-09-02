@@ -35,12 +35,20 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# IDE - IntelliJ / PhpStorm (common IDEs)
+.idea/
+*.iml
+*.ipr
+*.iws
+
 # dotenv environment variable files
 .env
 .env.development.local
 .env.test.local
 .env.production.local
 .env.local
+# Ignore all .env.servicename files (e.g., .env.auth, .env.product)
+.env.*
 
 # temp directory
 .temp
