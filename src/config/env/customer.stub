@@ -1,0 +1,4 @@
+SERVICE_NAME=Customer
+DB_URI=mongodb://localhost:27017/nest-ec-ms-customer
+JWT_SECRET=C0d18mfB4F1BIudyp9VQlTJLVa/DP+yachlXFF5NYePS1dE1JTxCx8GCHEv38z0heUClQQ45yCxeaODFbY1TRQ==
+PORT=3001
