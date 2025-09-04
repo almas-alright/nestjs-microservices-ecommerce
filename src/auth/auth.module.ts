@@ -1,27 +1,37 @@
+// src/auth/auth.module.ts
 import { Module } from '@nestjs/common';
-import { ConfigService } from '../config/config.service';
-import { JwtModule } from '@nestjs/jwt';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AppConfigModule } from '../config/config.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { UserModule } from '../user/user.module';
-import { JwtService } from './jwt.service';
+import { UserService } from './user/user.service';
+import { UserSchema } from './schemas/user.schema'; // Import UserSchema directly
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { PasswordService } from './password/password.service';
+import { CustomerService } from './customer/customer.service';
 
 @Module({
   imports: [
-    JwtModule.registerAsync({
+    AppConfigModule.forRoot('auth'), // Pass 'auth' as serviceName here
+    MongooseModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET_KEY'), // Fetch JWT secret from auth.env
-        // signOptions: { expiresIn: '1h' },
+        uri: configService.get<string>('DB_URI'), // Get the DB_URI from .env
       }),
       inject: [ConfigService],
     }),
-    UserModule,
+    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]), // Use 'User' as string
+    JwtModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'), // Pass JWT_SECRET dynamically
+        signOptions: { expiresIn: '60m' },
+      }),
+      inject: [ConfigService],
+    }), // JWT configuration
+    ConfigModule,
   ],
-  providers: [
-    { provide: ConfigService, useFactory: () => new ConfigService('auth') },
-    AuthService,
-    JwtService,
-  ],
+  providers: [AuthService, UserService, JwtStrategy, PasswordService, CustomerService],
   controllers: [AuthController],
 })
 export class AuthModule {}
