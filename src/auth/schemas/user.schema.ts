@@ -1,27 +1,27 @@
 // src/auth/schemas/user.schema.ts
-import { Schema, Document } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 import * as uuid from 'uuid';
 
-export interface User extends Document {
+@Schema({ timestamps: true })
+export class User extends Document {
+  @Prop({ type: String, default: uuid.v4 }) // UUID for userId
   userId: string;
+
+  @Prop({ required: true, unique: true })
   username: string;
+
+  @Prop({ required: true })
   password: string;
+
+  @Prop({ required: true })
   name: string;
+
+  @Prop({ required: true, unique: true })
   email: string;
+
+  @Prop({ type: [String], default: [] })
   roles: string[];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
-// Define the User schema
-export const UserSchema = new Schema(
-  {
-    userId: { type: String, default: uuid.v4 }, // UUID for userId
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    roles: { type: [String], default: [] },
-  },
-  { timestamps: true }
-);
+export const UserSchema = SchemaFactory.createForClass(User);

@@ -9,6 +9,8 @@ import { UserSchema } from './schemas/user.schema'; // Import UserSchema directl
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { PasswordService } from './password/password.service';
+import { CustomerService } from './customer/customer.service';
 
 @Module({
   imports: [
@@ -29,7 +31,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }), // JWT configuration
     ConfigModule,
   ],
-  providers: [AuthService, UserService, JwtStrategy],
+  providers: [AuthService, UserService, JwtStrategy, PasswordService, CustomerService],
   controllers: [AuthController],
 })
 export class AuthModule {}

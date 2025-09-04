@@ -1,13 +1,17 @@
-// src/auth/auth.service.ts
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user/user.service';
+import { CustomerService } from './customer/customer.service';
+import { CreateUserDto } from './dto/create-user.dto'; // Import CreateUserDto
+import { CreateCustomerDto } from './dto/create-customer.dto'; // Import CreateCustomerDto
+import { User } from './schemas/user.schema';
+import { Customer } from './schemas/customer.schema';
 
 interface JwtPayload {
   username: string;
   sub: string;
+  provider: string; // To distinguish between user and customer
 }
 
 @Injectable()
@@ -15,7 +19,8 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
-    private userService: UserService // Inject UserService
+    private userService: UserService, // Inject UserService
+    private customerService: CustomerService // Inject CustomerService
   ) {
     const dbUri = this.configService.get<string>('DB_URI');
     const jwtSecret = this.configService.get<string>('JWT_SECRET');
@@ -23,27 +28,70 @@ export class AuthService {
     console.log(`DB URI: ${dbUri}, JWT Secret: ${jwtSecret}, Port: ${port}`);
   }
 
-  // Login method (removed async since no await)
-  login(user: CreateUserDto) {
-    const payload: JwtPayload = { username: user.username, sub: user.userId };
+  // Login method for User (Marketplace)
+  async loginUser(username: string, password: string) {
+    let user: User;
+
+    try {
+      user = await this.userService.login(username, password); // User login
+      if (!user) {
+        throw new Error('Invalid credentials');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Error logging in the user: ${error.message}`);
+      }
+      throw error; // Propagate non-error issues
+    }
+
+    // Ensure user object is typed correctly
+    const payload: JwtPayload = {
+      username: user.username,
+      sub: user.userId,
+      provider: 'user',
+    };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload), // Return JWT token
     };
   }
 
-  // Register method (added error handling)
-  // src/auth/auth.service.ts
-  async register(createUserDto: CreateUserDto) {
+  // Login method for Customer
+  async loginCustomer(username: string, password: string) {
+    let customer: Customer;
+
     try {
-      const user = await this.userService.create(createUserDto); // Create user in DB
-      return this.login(user); // Return JWT on registration
-    } catch (error: unknown) {
-      // Safely handle the error
-      if (error instanceof Error) {
-        console.error(error.message);
-        throw new Error('User registration failed');
+      customer = await this.customerService.login(username, password); // Customer login
+      if (!customer) {
+        throw new Error('Invalid credentials');
       }
-      throw error; // Re-throw the error if it's not an instance of Error
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Error logging in the customer: ${error.message}`);
+      }
+      throw error; // Propagate non-error issues
     }
+
+    // Use customer.userId for the JWT payload
+    const payload: JwtPayload = {
+      username: customer.username,
+      sub: customer.userId,
+      provider: 'customer',
+    };
+    return {
+      access_token: this.jwtService.sign(payload), // Return JWT token
+    };
+  }
+
+  // Register method for User (Marketplace)
+  async registerUser(createUserDto: CreateUserDto) {
+    const user: User = await this.userService.create(createUserDto); // Register user
+    return this.loginUser(user.username, createUserDto.password); // Login after registration
+  }
+
+  // Register method for Customer
+  async registerCustomer(createCustomerDto: CreateCustomerDto) {
+    const customer: Customer =
+      await this.customerService.register(createCustomerDto); // Register customer
+    return this.loginCustomer(customer.username, createCustomerDto.password); // Login after registration
   }
 }
