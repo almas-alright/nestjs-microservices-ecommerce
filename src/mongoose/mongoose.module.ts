@@ -10,7 +10,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
     // MongoDB connection for Product Service
     MongooseModule.forRoot('mongodb://localhost:27017/nest-ms-ec-products', {
-      connectionName: 'productsDb',  // Connection for Product DB
+      connectionName: 'productsDb', // Connection for Product DB
     }),
 
     // Add more MongoDB connections as needed for other services

@@ -1,46 +1,49 @@
+// src/auth/auth.service.ts
 import { Injectable } from '@nestjs/common';
-import { UserService } from '../user/user.service';
-import { JwtService } from './jwt.service';
-import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from '../user/create-user.dto'; // Import CreateUserDto
-import { User } from '../user/user.schema'; // Import User schema
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UserService } from './user/user.service';
+
+interface JwtPayload {
+  username: string;
+  sub: string;
+}
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly userService: UserService,
-    private readonly jwtService: JwtService
-  ) {}
-
-  // Register method with CreateUserDto
-  async register(body: CreateUserDto) {
-    // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(body.password, 10);
-    const newUser: User = await this.userService.create({
-      email: body.email,
-      password: hashedPassword,
-      name: body.name,
-      role: body.role || 'customer',
-    });
-
-    const token = this.jwtService.generateToken(newUser);
-    return { token };
+    private jwtService: JwtService,
+    private configService: ConfigService,
+    private userService: UserService // Inject UserService
+  ) {
+    const dbUri = this.configService.get<string>('DB_URI');
+    const jwtSecret = this.configService.get<string>('JWT_SECRET');
+    const port = this.configService.get<number>('PORT');
+    console.log(`DB URI: ${dbUri}, JWT Secret: ${jwtSecret}, Port: ${port}`);
   }
 
-  // Login method with proper user typing
-  async login(body: { email: string; password: string }) {
-    // Validate user credentials
-    const user: User | null = await this.userService.findByEmail(body.email);
-    if (!user) {
-      throw new Error('User not found');
-    }
+  // Login method (removed async since no await)
+  login(user: CreateUserDto) {
+    const payload: JwtPayload = { username: user.username, sub: user.userId };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
+  }
 
-    const isPasswordValid = await bcrypt.compare(body.password, user.password);
-    if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
+  // Register method (added error handling)
+  // src/auth/auth.service.ts
+  async register(createUserDto: CreateUserDto) {
+    try {
+      const user = await this.userService.create(createUserDto); // Create user in DB
+      return this.login(user); // Return JWT on registration
+    } catch (error: unknown) {
+      // Safely handle the error
+      if (error instanceof Error) {
+        console.error(error.message);
+        throw new Error('User registration failed');
+      }
+      throw error; // Re-throw the error if it's not an instance of Error
     }
-
-    const token = this.jwtService.generateToken(user);
-    return { token };
   }
 }
