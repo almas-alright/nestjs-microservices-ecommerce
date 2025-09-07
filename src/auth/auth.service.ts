@@ -80,7 +80,7 @@ export class AuthService {
 
   async registerCustomer(createCustomerDto: CreateCustomerDto) {
     const customer: Customer =
-      await this.customerService.register(createCustomerDto);
+      await this.customerService.create(createCustomerDto);
     return this.loginCustomer({
       username: customer.username,
       password: createCustomerDto.password,

@@ -19,18 +19,27 @@ export class CustomerService {
     private utilsService: UtilsService // Inject UtilsService
   ) {}
 
-  // Register customer
-  async register(createCustomerDto: CreateCustomerDto): Promise<Customer> {
-    const hashedPassword = await this.passwordService.hashPassword(
-      createCustomerDto.password
-    );
+  async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
+    try {
+      const hashedPassword = await this.passwordService.hashPassword(
+        createCustomerDto.password
+      );
 
-    const customer = new this.customerModel({
-      ...createCustomerDto,
-      password: hashedPassword,
-    });
+      const customer = new this.customerModel({
+        ...createCustomerDto,
+        password: hashedPassword,
+      });
 
-    return await customer.save();
+      return await customer.save();
+    } catch (error) {
+      const duplicatedField = this.utilsService.getDuplicateField(error); // Use UtilsService
+      if (duplicatedField) {
+        throw new ConflictException(
+          `${duplicatedField.charAt(0).toUpperCase() + duplicatedField.slice(1)} already exists.`
+        );
+      }
+      throw error; // Propagate other errors
+    }
   }
 
   // Updated login method

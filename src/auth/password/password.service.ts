@@ -8,8 +8,6 @@ export class PasswordService {
     if (!password) {
       throw new Error('Password is required for hashing');
     }
-
-    console.log('Hashing password:', password); // Log the password
     const salt = await bcrypt.genSalt(10);
     return await bcrypt.hash(password, salt);
   }
