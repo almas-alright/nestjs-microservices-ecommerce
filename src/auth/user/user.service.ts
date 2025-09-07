@@ -1,31 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { User } from '../schemas/user.schema';
 import { PasswordService } from '../password/password.service'; // Import PasswordService
+import { UtilsService } from '../utils/utils.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel('User') private userModel: Model<User>,
-    private readonly passwordService: PasswordService // Inject PasswordService
+    private readonly passwordService: PasswordService, // Inject PasswordService
+    private utilsService: UtilsService
   ) {}
 
   // Create user method with password hashing
   async create(createUserDto: CreateUserDto): Promise<User> {
-    // Hash the password before saving it
-    const hashedPassword = await this.passwordService.hashPassword(
-      createUserDto.password
-    );
+    try {
+      const createdUser = new this.userModel(createUserDto);
+      return await createdUser.save();
+    } catch (error) {
+      const duplicatedField = this.utilsService.getDuplicateField(error);
 
-    // Create a new user with the hashed password
-    const createdUser = new this.userModel({
-      ...createUserDto,
-      password: hashedPassword, // Use the hashed password
-    });
+      if (duplicatedField) {
+        const message = `${duplicatedField.charAt(0).toUpperCase() + duplicatedField.slice(1)} already exists.`;
+        throw new ConflictException(message);
+      }
 
-    return createdUser.save();
+      throw error; // Propagate other errors
+    }
   }
 
   // Login user method to validate credentials

@@ -5,6 +5,11 @@ import * as bcrypt from 'bcryptjs';
 export class PasswordService {
   // Hash the password
   async hashPassword(password: string): Promise<string> {
+    if (!password) {
+      throw new Error('Password is required for hashing');
+    }
+
+    console.log('Hashing password:', password); // Log the password
     const salt = await bcrypt.genSalt(10);
     return await bcrypt.hash(password, salt);
   }
