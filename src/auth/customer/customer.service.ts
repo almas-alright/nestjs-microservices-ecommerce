@@ -1,46 +1,82 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreateCustomerDto } from '../dto/create-customer.dto'; // DTO for customer registration
-import { Customer } from '../schemas/customer.schema'; // Customer Schema
-import { PasswordService } from '../password/password.service'; // Password hashing service
+import { CreateCustomerDto } from '../dto/create-customer.dto';
+import { Customer } from '../schemas/customer.schema';
+import { PasswordService } from '../password/password.service';
+import { UtilsService } from '../utils/utils.service'; // Import UtilsService
+import { LoginDto } from '../dto/login-dto'; // Import LoginDto
 
 @Injectable()
 export class CustomerService {
   constructor(
     @InjectModel('Customer') private customerModel: Model<Customer>,
-    private readonly passwordService: PasswordService // Inject PasswordService for hashing
+    private readonly passwordService: PasswordService,
+    private utilsService: UtilsService // Inject UtilsService
   ) {}
 
   // Register customer
   async register(createCustomerDto: CreateCustomerDto): Promise<Customer> {
     const hashedPassword = await this.passwordService.hashPassword(
       createCustomerDto.password
-    ); // Hash the password
+    );
 
     const customer = new this.customerModel({
-      ...createCustomerDto, // No need to destructure the properties again
-      password: hashedPassword, // Store the hashed password
+      ...createCustomerDto,
+      password: hashedPassword,
     });
 
-    return await customer.save(); // Save the customer in the DB
+    return await customer.save();
   }
 
-  // Login customer
-  async login(username: string, password: string): Promise<Customer> {
-    const customer = await this.customerModel.findOne({ username }).exec(); // Find customer by username
+  // Updated login method
+  async login(loginDto: LoginDto): Promise<Customer> {
+    let customer: Customer | null;
+
+    // Check if the loginDto contains email or username
+    if (loginDto.email) {
+      // Validate email format using UtilsService
+      if (!this.utilsService.isValidEmail(loginDto.email)) {
+        throw new BadRequestException('Invalid email format');
+      }
+
+      // Search by email
+      customer = await this.customerModel
+        .findOne({ email: loginDto.email })
+        .exec();
+    } else if (loginDto.username) {
+      // Validate username format using UtilsService
+      if (!this.utilsService.isValidUsername(loginDto.username)) {
+        throw new BadRequestException('Invalid username format');
+      }
+
+      // Search by username
+      customer = await this.customerModel
+        .findOne({ username: loginDto.username })
+        .exec();
+    } else {
+      throw new BadRequestException(
+        'Either email or username must be provided'
+      );
+    }
+
+    // Handle case where no customer was found
     if (!customer) {
-      throw new Error('Invalid credentials'); // If not found, throw error
+      throw new ConflictException('Invalid credentials');
     }
 
     const isPasswordValid = await this.passwordService.comparePassword(
-      password,
+      loginDto.password,
       customer.password
-    ); // Compare passwords
+    );
     if (!isPasswordValid) {
-      throw new Error('Invalid credentials'); // If password is incorrect, throw error
+      throw new ConflictException('Invalid credentials');
     }
 
-    return customer; // Return the customer if credentials are valid
+    return customer;
   }
 }

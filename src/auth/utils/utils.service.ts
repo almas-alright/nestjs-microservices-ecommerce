@@ -26,4 +26,16 @@ export class UtilsService {
     }
     return null;
   }
+
+  // Validate email format
+  isValidEmail(email: string): boolean {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return emailRegex.test(email);
+  }
+
+  // Validate username format (alphanumeric + underscores)
+  isValidUsername(username: string): boolean {
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    return usernameRegex.test(username);
+  }
 }

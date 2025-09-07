@@ -1,10 +1,15 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { User } from '../schemas/user.schema';
 import { PasswordService } from '../password/password.service';
 import { UtilsService } from '../utils/utils.service'; // Import UtilsService
+import { LoginDto } from '../dto/login-dto'; // Import LoginDto
 
 @Injectable()
 export class UserService {
@@ -29,18 +34,46 @@ export class UserService {
     }
   }
 
-  async login(username: string, password: string): Promise<User> {
-    const user = await this.userModel.findOne({ username }).exec();
+  // Updated login method
+  async login(loginDto: LoginDto): Promise<User> {
+    let user: User | null;
+
+    // Check if the loginDto contains email or username
+    if (loginDto.email) {
+      // Validate email format using UtilsService
+      if (!this.utilsService.isValidEmail(loginDto.email)) {
+        throw new BadRequestException('Invalid email format');
+      }
+
+      // Search by email
+      user = await this.userModel.findOne({ email: loginDto.email }).exec();
+    } else if (loginDto.username) {
+      // Validate username format using UtilsService
+      if (!this.utilsService.isValidUsername(loginDto.username)) {
+        throw new BadRequestException('Invalid username format');
+      }
+
+      // Search by username
+      user = await this.userModel
+        .findOne({ username: loginDto.username })
+        .exec();
+    } else {
+      throw new BadRequestException(
+        'Either email or username must be provided'
+      );
+    }
+
+    // Handle case where no user was found
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new ConflictException('Invalid credentials');
     }
 
     const isPasswordValid = await this.passwordService.comparePassword(
-      password,
+      loginDto.password,
       user.password
     );
     if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
+      throw new ConflictException('Invalid credentials');
     }
 
     return user;
