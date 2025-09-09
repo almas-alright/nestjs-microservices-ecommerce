@@ -11,7 +11,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { PasswordService } from './password/password.service';
 import { CustomerService } from './customer/customer.service';
 import { Customer, CustomerSchema } from './schemas/customer.schema';
-import { UtilsService } from './utils/utils.service'; // Ensure Customer schema is imported
+import { UtilsService } from './utils/utils.service';
+import { AuthServiceProvider } from './auth.service.provider'; // Ensure Customer schema is imported
 
 @Module({
   imports: [
@@ -36,12 +37,13 @@ import { UtilsService } from './utils/utils.service'; // Ensure Customer schema 
     ConfigModule,
   ],
   providers: [
-    AuthService,
-    UserService,
     JwtStrategy,
     PasswordService,
-    CustomerService,
     UtilsService,
+    AuthService,
+    AuthServiceProvider,
+    UserService,
+    CustomerService,
   ],
   controllers: [AuthController],
 })
