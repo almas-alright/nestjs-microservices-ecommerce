@@ -1,46 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreateCustomerDto } from '../dto/create-customer.dto'; // DTO for customer registration
-import { Customer } from '../schemas/customer.schema'; // Customer Schema
-import { PasswordService } from '../password/password.service'; // Password hashing service
+import { Customer } from '../schemas/customer.schema';
+import { CreateCustomerDto } from '../dto/create-customer.dto';
+import { LoginDto } from '../dto/login-dto';
+import { AuthServiceProvider } from '../auth.service.provider';
 
 @Injectable()
 export class CustomerService {
   constructor(
-    @InjectModel('Customer') private customerModel: Model<Customer>,
-    private readonly passwordService: PasswordService // Inject PasswordService for hashing
+    private readonly authServiceProvider: AuthServiceProvider<
+      Customer,
+      CreateCustomerDto
+    >,
+    @InjectModel(Customer.name) private customerModel: Model<Customer>
   ) {}
 
-  // Register customer
-  async register(createCustomerDto: CreateCustomerDto): Promise<Customer> {
-    const hashedPassword = await this.passwordService.hashPassword(
-      createCustomerDto.password
-    ); // Hash the password
-
-    const customer = new this.customerModel({
-      ...createCustomerDto, // No need to destructure the properties again
-      password: hashedPassword, // Store the hashed password
-    });
-
-    return await customer.save(); // Save the customer in the DB
+  async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
+    return this.authServiceProvider.register(
+      createCustomerDto,
+      this.customerModel
+    );
   }
 
-  // Login customer
-  async login(username: string, password: string): Promise<Customer> {
-    const customer = await this.customerModel.findOne({ username }).exec(); // Find customer by username
-    if (!customer) {
-      throw new Error('Invalid credentials'); // If not found, throw error
-    }
+  async login(loginDto: LoginDto): Promise<Customer> {
+    return this.authServiceProvider.login(loginDto, this.customerModel);
+  }
 
-    const isPasswordValid = await this.passwordService.comparePassword(
-      password,
-      customer.password
-    ); // Compare passwords
-    if (!isPasswordValid) {
-      throw new Error('Invalid credentials'); // If password is incorrect, throw error
-    }
-
-    return customer; // Return the customer if credentials are valid
+  async changePassword(
+    entityId: string,
+    oldPassword: string,
+    newPassword: string
+  ): Promise<any> {
+    return this.authServiceProvider.changePassword(
+      entityId,
+      oldPassword,
+      newPassword,
+      this.customerModel
+    );
   }
 }
